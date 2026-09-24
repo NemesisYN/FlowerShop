@@ -1,0 +1,16 @@
+# === Веб-фреймворк ===
+fastapi==0.141.1
+uvicorn==0.52.4
+
+# === База данных ===
+SQLAlchemy==2.0.52
+aiosqlite==0.22.1        # драйвер для SQLite (async)
+asyncpg==0.31.0          # драйвер для PostgreSQL (async)
+psycopg2-binary==2.9.12  # драйвер для PostgreSQL (sync, для Alembic)
+
+# === Валидация и настройки ===
+pydantic==2.13.5
+python-dotenv==1.2.3
+
+# === Утилиты (транзитивные, но полезно зафиксировать) ===
+greenlet==3.5.5          # нужен для async SQLAlchemy
