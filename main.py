@@ -8,16 +8,17 @@ from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict
-from dotenv import dotenv_values, load_dotenv
 import os
-# ============ БАЗА ДАННЫХ ============
+from dotenv import load_dotenv
 
-config = dotenv_values(".env")
+import json
+from cache import cache_get, cache_set, cache_delete_pattern
 
-DATABASE_URL = config["DATABASE_URL"]
+load_dotenv()
 
+DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-   raise ValueError("DATABASE_URL не задан в .env файле!")
+   raise ValueError("DATABASE_URL не задан!")
 
 # # Проверка на работоспособность ->
 # load_dotenv()
@@ -247,6 +248,7 @@ async def create_flower(flower_data: FlowerCreate, db: AsyncSession = Depends(ge
    flower = Flower(**flower_data.model_dump())
    db.add(flower)
    await db.commit()
+   await cache_delete_pattern("flowers:*")
    await db.refresh(flower)
    return flower
 
@@ -257,16 +259,42 @@ async def get_flowers(
    db: AsyncSession = Depends(get_db)
 ):
    """Получить все цветы (с пагинацией)"""
-   result = await db.execute(select(Flower).offset(skip).limit(limit))
-   return result.scalars().all()
+
+   redis_key = f"flowers:skip={skip}:limit={limit}"
+   cached = await cache_get(redis_key)
+
+   if cached is not None:
+      print("<FROM CACHE get all flowers>")
+      return cached
+   else:
+      print("<FROM DATABASE get all flowers>")
+      result = await db.execute(select(Flower).offset(skip).limit(limit))
+      flowers = result.scalars().all()
+      flowers_data = [FlowerResponse.model_validate(f).model_dump() for f in flowers]
+      await cache_set(redis_key, flowers_data, ttl=300)
+      return flowers_data
+
 
 @app.get("/flowers/{flower_id}", response_model=FlowerResponse, tags=["Цветы"])
 async def get_flower(flower_id: int, db: AsyncSession = Depends(get_db)):
    """Получить цветок по ID"""
+
+   redis_key = f"flowers:{flower_id}"
+   cached = await cache_get(redis_key)
+
+   if cached is not None:
+      print(f"<FROM CACHE get flower {cached['name']}>")
+      return cached
+   
    flower = await db.get(Flower, flower_id)
    if not flower:
+      print("<THE DATABASE DOESN'T HAVE THIS FLOWER>")
       raise HTTPException(status_code=404, detail="Цветок не найден")
-   return flower
+
+   print(f"<FROM DATABASE get flower {flower.name}>")
+   flower_data = FlowerResponse.model_validate(flower).model_dump()
+   await cache_set(redis_key, flower_data, ttl=300)
+   return flower_data
 
 @app.patch("/flowers/{flower_id}/stock", tags=["Цветы"])
 async def update_stock(
@@ -291,6 +319,7 @@ async def delete_flowers(db: AsyncSession = Depends(get_db)):
    """Удалить все цветы"""
    await db.execute(delete(Flower))
    await db.commit()
+   await cache_delete_pattern("flowers:*")
 
 
 @app.delete("/flowers/{flower_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Цветы"])
@@ -301,6 +330,7 @@ async def delete_flower(flower_id: int, db: AsyncSession = Depends(get_db)):
       raise HTTPException(status_code=404, detail="Цветок не найден")
    await db.delete(flower)
    await db.commit()
+   await cache_delete_pattern("flowers:*")
 
 # ============ ЭНДПОИНТЫ ДЛЯ ЗАКАЗОВ ============
 
