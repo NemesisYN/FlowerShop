@@ -175,10 +175,6 @@ async def get_db():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
    print("Приложение запускается...")
-   # Создаем таблицы
-   async with engine.begin() as conn:
-      await conn.run_sync(Base.metadata.create_all)
-   print("База данных готова")
    yield
    print("Приложение завершает работу...")
    await engine.dispose()
