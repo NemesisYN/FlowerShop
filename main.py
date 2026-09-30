@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from contextlib import asynccontextmanager
 from sqlalchemy import ForeignKey, Table, Column, Integer, select, delete, func
@@ -11,7 +12,6 @@ from pydantic import BaseModel, Field, ConfigDict
 import os
 from dotenv import load_dotenv
 
-import json
 from cache import cache_get, cache_set, cache_delete_pattern
 
 load_dotenv()
@@ -27,7 +27,6 @@ if not DATABASE_URL:
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionConn = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
 
 class Base(DeclarativeBase):
    pass
@@ -187,6 +186,12 @@ app = FastAPI(
    version="1.0.0"
 )
 
+app.add_middleware(
+   CORSMiddleware, 
+   allow_headers=["*"],
+   allow_methods=["*"],
+   
+)
 # ============ ЭНДПОИНТЫ ДЛЯ КЛИЕНТОВ ============
 
 @app.get("/", tags=["Главная"])
@@ -203,7 +208,7 @@ async def create_client(client_data: ClientCreate, db: AsyncSession = Depends(ge
       if existing.scalar_one_or_none():
          raise HTTPException(
                status_code=status.HTTP_400_BAD_REQUEST,
-               detail="Клиент с таким email уже существует"
+               detail="Клиент c таким email уже существует"
          )
    
    # Создаём клиента
@@ -401,7 +406,7 @@ async def get_orders(
    status: Optional[str] = None,
    db: AsyncSession = Depends(get_db)
 ):
-   """Получить все заказы (с фильтром по статусу)"""
+   """Получить все заказы (c фильтром по статусу)"""
    query = select(Order)
    if status:
       query = query.where(Order.status == status)
@@ -418,7 +423,7 @@ async def get_orders(
 
 @app.get("/orders/{order_id}", response_model=OrderDetailResponse, tags=["Заказы"])
 async def get_order(order_id: int, db: AsyncSession = Depends(get_db)):
-   """Получить заказ по ID с деталями"""
+   """Получить заказ по ID деталями"""
    # Загружаем заказ с клиентом и цветами
    query = select(Order).where(Order.id == order_id).options(
       selectinload(Order.client),
