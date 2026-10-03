@@ -22,3 +22,6 @@ greenlet==3.5.5          # нужен для async SQLAlchemy
 alembic==1.20.0
 psycopg2-binary==2.9.12
 asyncpg==0.31.0
+
+# === Фоновые Задачи ===
+celery==5.6.3

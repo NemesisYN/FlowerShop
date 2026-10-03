@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 
 from cache import cache_get, cache_set, cache_delete_pattern
 
+from celery_tasks import send_order_email
+
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -29,7 +31,11 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionConn = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 class Base(DeclarativeBase):
-   pass
+   """Base class for ORM models."""
+   
+   id: Mapped[int] = mapped_column(
+      primary_key=True
+   )
 
 # ============ ПРОМЕЖУТОЧНАЯ ТАБЛИЦА ============
 flower_order_association = Table(
@@ -44,7 +50,6 @@ flower_order_association = Table(
 class Client(Base):
    __tablename__ = "clients"
 
-   id: Mapped[int] = mapped_column(primary_key=True)
    name: Mapped[str] = mapped_column(nullable=False)
    address: Mapped[str] = mapped_column(nullable=False)
    phone: Mapped[Optional[str]]
@@ -59,10 +64,9 @@ class Client(Base):
 class Flower(Base):
    __tablename__ = "flowers"
 
-   id: Mapped[int] = mapped_column(primary_key=True)
    name: Mapped[str] = mapped_column(nullable=False)
    color: Mapped[str] = mapped_column(nullable=False)
-   price: Mapped[float] = mapped_column(nullable=False, default=11.0)
+   price: Mapped[float] = mapped_column(nullable=False, default=1.0)
    stock_quantity: Mapped[int] = mapped_column(default=0)
    description: Mapped[Optional[str]]
    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
@@ -82,11 +86,10 @@ class OrderStatus(str, Enum):
 class Order(Base):
    __tablename__ = "orders"
 
-   id: Mapped[int] = mapped_column(primary_key=True)
    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"))
    order_date: Mapped[datetime] = mapped_column(default=datetime.utcnow)
    status: Mapped[str] = mapped_column(default=OrderStatus.PENDING.value)
-   total_amount: Mapped[Optional[float]] = mapped_column(default=0)
+   total_amount: Mapped[Optional[float]] = mapped_column(default=0.0)
 
    client: Mapped["Client"] = relationship(
       "Client",
@@ -190,8 +193,9 @@ app.add_middleware(
    CORSMiddleware, 
    allow_headers=["*"],
    allow_methods=["*"],
-   
+   allow_credentials=True
 )
+
 # ============ ЭНДПОИНТЫ ДЛЯ КЛИЕНТОВ ============
 
 @app.get("/", tags=["Главная"])
@@ -387,6 +391,8 @@ async def create_order(order_data: OrderCreate, db: AsyncSession = Depends(get_d
    
    order.total_amount = total
    await db.commit()
+
+   send_order_email.delay(order.id, "client@example.com")
    
    # ПЕРЕЗАГРУЖАЕМ заказ с подгрузкой flowers
    stmt = (
