@@ -1,5 +1,5 @@
 import time
-from celery_main import celery_app
+from app.tasks.celery_main import celery_app
 
 
 @celery_app.task(name="send_order_email")

@@ -1,12 +1,11 @@
-import os
 from celery import Celery
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//")
+from app.core.config import app_config 
 
 celery_app = Celery(
    "notifications",
-   broker=CELERY_BROKER_URL,
-   include=["celery_tasks"] # Celery ищет задачи в файле celery_tasks.py
+   broker=app_config.CELERY_BROKER_URL,
+   include=["app.tasks.celery_tasks"] # Celery ищет задачи в файле celery_tasks.py
 )
 
 celery_app.conf.update(
