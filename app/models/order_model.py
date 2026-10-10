@@ -23,7 +23,7 @@ class OrderStatus(str, Enum):
 class Order(Base):
    __tablename__ = "orders"
 
-   id: Mapped[int] = mapped_column(primary_key=True, index=True)
+   id: Mapped[int] = mapped_column(primary_key=True)
    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"))
    order_date: Mapped[datetime] = mapped_column(default=datetime.utcnow)
    status: Mapped[str] = mapped_column(default=OrderStatus.PENDING.value)

@@ -1,17 +1,19 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
 
 from app.core.database import Base
 from app.models.associative_tables import flower_order_association
-from app.models.order_model import Order
+
+if TYPE_CHECKING:
+   from app.models.order_model import Order
 
 
 class Flower(Base):
    __tablename__ = "flowers"
 
-   id: Mapped[int] = mapped_column(primary_key=True, index=True)
+   id: Mapped[int] = mapped_column(primary_key=True)
    name: Mapped[str] = mapped_column(nullable=False)
    color: Mapped[str] = mapped_column(nullable=False)
    price: Mapped[float] = mapped_column(nullable=False, default=1.0)

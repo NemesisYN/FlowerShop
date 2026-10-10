@@ -15,12 +15,15 @@ class OrderRepository:
    def __init__(self, db: AsyncSession):
       self.db = db
 
+
    # === Вспомогательные ===
    async def get_client(self, client_id: int) -> Client | None:
       return await self.db.get(Client, client_id)
 
+
    async def get_flower(self, flower_id: int) -> Flower | None:
       return await self.db.get(Flower, flower_id)
+
 
    # === Заказы ===
    async def create(self, client_id: int, status: str) -> Order:
@@ -29,8 +32,10 @@ class OrderRepository:
       await self.db.flush()
       return order
 
+
    async def get_by_id(self, order_id: int) -> Order | None:
       return await self.db.get(Order, order_id)
+
 
    async def get_with_relations(
       self, order_id: int, with_client: bool = False
@@ -47,14 +52,21 @@ class OrderRepository:
       result = await self.db.execute(stmt)
       return result.scalar_one_or_none()
 
-   async def get_list(self, skip: int = 0, limit: int = 100, status: str | None = None) -> List[Order]:
-      stmt = select(Order).options(selectinload(Order.flowers))
+
+   async def get_list(self, client_id: int, skip: int = 0, limit: int = 100, status: str | None = None) -> List[Order]:
+      options = [selectinload(Order.flowers), selectinload(Order.client)]
+      stmt = (
+         select(Order)
+         .where(Order.client_id == client_id)
+         .options(*options)
+         )
       if status:
          stmt = stmt.where(Order.status == status)
       stmt = stmt.offset(skip).limit(limit)
 
       result = await self.db.execute(stmt)
       return list(result.scalars().all())
+
 
    async def get_by_client(self, client_id: int) -> List[Order]:
       stmt = (
@@ -65,8 +77,10 @@ class OrderRepository:
       result = await self.db.execute(stmt)
       return list(result.scalars().all())
 
+
    async def delete(self, order: Order) -> None:
       await self.db.delete(order)
+
 
    # === Ассоциативная таблица ===
    async def add_flower(
@@ -79,12 +93,14 @@ class OrderRepository:
          )
       )
 
+
    async def get_associations(self, order_id: int):
       stmt = select(flower_order_association).where(
          flower_order_association.c.order_id == order_id
       )
       result = await self.db.execute(stmt)
       return result.all()
+
 
    async def get_quantities_map(self, order_id: int) -> dict[int, int]:
       """Один запрос → {flower_id: quantity}."""
@@ -95,6 +111,7 @@ class OrderRepository:
 
       result = await self.db.execute(stmt)
       return {row.flower_id: row.quantity for row in result.all()}
+
 
    # === STATS ===
    async def get_summary(self) -> dict:

@@ -12,7 +12,7 @@ class OrderItem(BaseModel):
    quantity: int = Field(ge=1, description="Количество цветов")
 
 class OrderCreate(BaseModel):
-   client_id: int
+   client_id: int | None = None
    items: List[OrderItem]  # список цветов с количеством
 
 class OrderResponse(BaseModel):

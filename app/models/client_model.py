@@ -11,11 +11,13 @@ if TYPE_CHECKING:
 class Client(Base):
    __tablename__ = "clients"
 
-   id: Mapped[int] = mapped_column(primary_key=True, index=True)
+   id: Mapped[int] = mapped_column(primary_key=True)
    name: Mapped[str] = mapped_column(nullable=False)
    address: Mapped[str] = mapped_column(nullable=False)
-   phone: Mapped[Optional[str]] = mapped_column(unique=True)
-   email: Mapped[Optional[str]] = mapped_column(unique=True)
+   phone: Mapped[Optional[str]]
+   email: Mapped[Optional[str]] = mapped_column(unique=True, index=True, nullable=False)
+   hashed_password: Mapped[str] = mapped_column(nullable=False)
+   is_active: Mapped[bool] = mapped_column(default=True)
 
    orders: Mapped[List["Order"]] = relationship(
       "Order", 

@@ -2,7 +2,9 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 
 from app.api.dependencies import get_client_service, get_order_service
+from app.api.dependencies import get_current_user
 from app.schemas.client_schemas import ClientCreate, ClientResponse
+from app.models.client_model import Client
 from app.services.client_service import ClientService
 from app.services.order_service import OrderService
 
@@ -47,3 +49,7 @@ async def get_client_orders(
 ):
    """Получить все заказы клиента."""
    return await service.get_orders(client_id)
+
+@router.get("/me", response_model=ClientResponse)
+async def get_me(current_user: Client = Depends(get_current_user)):
+   return current_user

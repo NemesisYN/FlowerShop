@@ -5,7 +5,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from app.api.routes import clients, flowers, orders, stats
+from app.api.routes import clients, flowers, orders, stats, auth
 from app.core.database import engine
 
 @asynccontextmanager
@@ -35,6 +35,7 @@ app.include_router(clients.router)
 app.include_router(flowers.router)
 app.include_router(orders.router)
 app.include_router(stats.router)
+app.include_router(auth.router)
 
 
 @app.get("/", tags=["Главная"])
