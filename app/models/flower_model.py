@@ -11,7 +11,7 @@ from app.models.order_model import Order
 class Flower(Base):
    __tablename__ = "flowers"
 
-   id: Mapped[int] = mapped_column(primary_key=True)
+   id: Mapped[int] = mapped_column(primary_key=True, index=True)
    name: Mapped[str] = mapped_column(nullable=False)
    color: Mapped[str] = mapped_column(nullable=False)
    price: Mapped[float] = mapped_column(nullable=False, default=1.0)
