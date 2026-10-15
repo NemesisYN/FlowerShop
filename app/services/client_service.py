@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.client_model import Client
 from app.repositories.client_repo import ClientRepository
 from app.schemas.client_schemas import ClientCreate
+from app.core.security import hash_password
 
 
 class ClientService:
@@ -24,7 +25,14 @@ class ClientService:
                   detail="Клиент с таким email уже существует",
                )
 
-      client = Client(**data.model_dump())
+      client = Client(
+         name=data.name,
+         address=data.address,
+         phone=data.phone,
+         email=data.email,
+         hashed_password=hash_password(data.password) if data.password else None,
+         is_active=True,
+      )
       await self.repo.create(client)
 
       await self.db.commit()

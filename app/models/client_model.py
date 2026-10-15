@@ -14,9 +14,9 @@ class Client(Base):
    id: Mapped[int] = mapped_column(primary_key=True)
    name: Mapped[str] = mapped_column(nullable=False)
    address: Mapped[str] = mapped_column(nullable=False)
-   phone: Mapped[Optional[str]]
+   phone: Mapped[Optional[str]] = mapped_column(nullable=True)
    email: Mapped[Optional[str]] = mapped_column(unique=True, index=True, nullable=False)
-   hashed_password: Mapped[str] = mapped_column(nullable=False)
+   hashed_password: Mapped[Optional[str]] = mapped_column(nullable=True)
    is_active: Mapped[bool] = mapped_column(default=True)
 
    orders: Mapped[List["Order"]] = relationship(

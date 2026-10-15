@@ -8,6 +8,7 @@ class ClientCreate(BaseModel):
    address: str
    phone: Optional[str] = None
    email: Optional[str] = None
+   password: str | None = None
 
 
 class ClientResponse(BaseModel):

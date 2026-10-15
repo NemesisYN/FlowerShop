@@ -39,22 +39,22 @@ class AuthService:
 
    async def login(self, form_data: OAuth2PasswordRequestForm) -> Token:
       """Логин: проверка пароля + выдача токенов."""
-      client = await self.client_repo.get_by_email(form_data.email)
-      if not client or not verify_password(form_data.password, client.hashed_password):
+      client = await self.client_repo.get_by_email(form_data.username)
+      if not client or not client.hashed_password or not verify_password(form_data.password, client.hashed_password):
          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Uncorrected email or password")
 
-      if not client.is_active():
+      if not client.is_active:
          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account has deactivated")
 
       payload = {"sub": str(client.id), "email": client.email}
       access = create_access_token(payload)
       refresh = create_refresh_token(payload)
 
-      return {
-         "access_token": access,
-         "refresh_token": refresh,
-         "token_type": "bearer",
-      }
+      return Token(
+         access_token=access,
+         refresh_token=refresh,
+         token_type="bearer"
+      )
 
    async def logout(self, token: str) -> None:
       """Добавить токен в чёрный список."""
