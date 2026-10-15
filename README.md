@@ -43,21 +43,68 @@ REST API на FastAPI с JWT-аутентификацией, кеширован�
 - Инвалидация кеша при изменении данных
 
 ## 🏗 Архитектура
-app/
-├── api/ # Роутеры и зависимости
-│ ├── routes/
-│ └── dependencies.py
-├── cache/ # Redis-репозиторий
-├── core/ # Конфиг, БД, JWT, безопасность
-├── models/ # SQLAlchemy-модели
-├── repositories/ # Работа с БД
-├── schemas/ # Pydantic-схемы
-├── services/ # Бизнес-логика
-├── tasks/ # Celery-задачи
-└── main.py # Точка входа
 
+```
+app/
+├── api/                  # Роутеры и зависимости
+│   ├── routes/           # Эндпоинты
+│   │   ├── auth.py
+│   │   ├── clients.py
+│   │   ├── flowers.py
+│   │   ├── orders.py
+│   │   └── stats.py
+│   └── dependencies.py   # Depends (get_db, get_current_user, get_*_service)
+│
+├── cache/                # Работа с Redis
+│   └── redis_repository.py
+│
+├── core/                 # Ядро приложения
+│   ├── config.py         # Настройки (.env)
+│   ├── database.py       # Engine, Base, get_db
+│   ├── jwt.py            # Создание/проверка JWT
+│   └── security.py       # Хеширование паролей (pwdlib)
+│
+├── models/               # SQLAlchemy-модели
+│   ├── client_model.py
+│   ├── flower_model.py
+│   ├── order_model.py
+│   ├── blacklist_model.py
+│   └── associative_tables.py
+│
+├── repositories/         # Работа с БД (SQL)
+│   ├── client_repo.py
+│   ├── flower_repo.py
+│   ├── order_repo.py
+│   └── blacklist_repo.py
+│
+├── schemas/              # Pydantic-схемы
+│   ├── auth_schemas.py
+│   ├── client_schemas.py
+│   ├── flower_schemas.py
+│   └── order_schemas.py
+│
+├── services/             # Бизнес-логика
+│   ├── auth_service.py
+│   ├── client_service.py
+│   ├── flower_service.py
+│   ├── order_service.py
+│   └── stats_service.py
+│
+├── tasks/                # Celery-задачи
+│   ├── celery_main.py
+│   └── celery_tasks.py
+│
+└── main.py               # Точка входа FastAPI
+```
 
 **Поток данных:** `API → Service → Repository → БД`
+
+**Слои:**
+- **API** — принимает запрос, возвращает ответ.
+- **Service** — бизнес-логика (правила, проверки).
+- **Repository** — работа с БД (SQL, commit).
+- **Model** — структура таблиц.
+- **Schema** — валидация данных (Pydantic).
 
 ## 🚀 Запуск
 
@@ -133,4 +180,3 @@ GET	/stats/orders-summary/	     Сводка по заказам
 GitHub: @NemesisYN
 
 Email: nikitakarel10@gmail.com
-
