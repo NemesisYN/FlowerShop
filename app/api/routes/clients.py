@@ -19,6 +19,7 @@ async def create_client(
 ):
    return await service.create_client(client_data)
 
+
 @router.get("/me", response_model=ClientResponse)
 async def get_me(current_user: Client = Depends(get_current_user)):
    return current_user

@@ -33,3 +33,8 @@ pwdlib[argon2]==0.3.1
 
 # === Остальное ===
 python-multipart==0.0.32
+
+# === Тесты ===
+pytest==9.1.1
+pytest-asyncio==1.4.0
+httpx==0.28.1
