@@ -19,6 +19,10 @@ async def create_client(
 ):
    return await service.create_client(client_data)
 
+@router.get("/me", response_model=ClientResponse)
+async def get_me(current_user: Client = Depends(get_current_user)):
+   return current_user
+
 
 @router.get("/", response_model=List[ClientResponse])
 async def get_clients(service: ClientService = Depends(get_client_service)):
@@ -49,7 +53,3 @@ async def get_client_orders(
 ):
    """Получить все заказы клиента."""
    return await service.get_orders(client_id)
-
-@router.get("/me", response_model=ClientResponse)
-async def get_me(current_user: Client = Depends(get_current_user)):
-   return current_user
