@@ -116,7 +116,7 @@ app/
 
 1. Клонировать репозиторий:
 ```bash
-git clone https://github.com/твой_ник/flowershop.git
+git clone https://github.com/NemesisYN/flowershop.git
 cd flowershop
 
 Создать .env:
